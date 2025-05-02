@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fern-reporter
+  labels:
+    app: fern-reporter
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fern-reporter
+  template:
+    metadata:
+      labels:
+        app: fern-reporter
+    spec:
+      containers:
+      - name: fern-reporter
+        # Image is built locally via Tilt (no registry push)
+        image: fern-reporter:dev
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 8080
+        env:
+        - name: DB_URL
+          # Connect to the Postgres service in-cluster
+          value: "postgres://devuser:devpass@postgres:5432/devdb?sslmode=disable"

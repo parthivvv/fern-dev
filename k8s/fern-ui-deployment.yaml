@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: fern-ui
+  labels:
+    app: fern-ui
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: fern-ui
+  template:
+    metadata:
+      labels:
+        app: fern-ui
+    spec:
+      containers:
+      - name: fern-ui
+        image: fern-ui:dev
+        imagePullPolicy: IfNotPresent
+        ports:
+        - containerPort: 5173  # Vite's default dev port
+        env:
+        - name: VITE_API_URL
+          # The frontend will use this environment variable (prefix VITE_) to reach the API
+          value: "http://fern-reporter:8080"
