@@ -151,7 +151,7 @@ spec:
         - containerPort: 8080
         env:
         - name: DB_URL
-          value: "postgres://devuser:devpass@postgres:5432/devdb?sslmode=disable"
+          value: "postgres://fern:fern@postgres:5432/fern?sslmode=disable"
 EOF
 
     # fern-reporter-service.yaml

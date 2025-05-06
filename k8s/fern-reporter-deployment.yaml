@@ -24,4 +24,4 @@ spec:
         env:
         - name: DB_URL
           # Connect to the Postgres service in-cluster
-          value: "postgres://devuser:devpass@postgres:5432/devdb?sslmode=disable"
+          value: "postgres://fern:fern@postgres:5432/fern?sslmode=disable"
