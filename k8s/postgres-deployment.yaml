@@ -21,11 +21,11 @@ spec:
         - containerPort: 5432
         env:
         - name: POSTGRES_USER
-          value: "devuser"
+          value: "fern"
         - name: POSTGRES_PASSWORD
-          value: "devpass"
+          value: "fern"
         - name: POSTGRES_DB
-          value: "devdb"
+          value: "fern"
         volumeMounts:
         - name: postgres-data
           mountPath: /var/lib/postgresql/data
