@@ -1,5 +1,5 @@
 # Configure Tilt to use local k3d cluster and apply K8s YAMLs
-default_registry = 'localhost:53882'
+default_registry = 'localhost:53881'
 k8s_yaml('k8s/postgres-deployment.yaml')
 k8s_yaml('k8s/postgres-service.yaml')
 k8s_yaml('k8s/fern-reporter-deployment.yaml')
@@ -26,5 +26,5 @@ docker_build('fern-ui', './fern-ui',
 
 # Define resources and port-forwarding
 k8s_resource('postgres', port_forwards=5432)
-k8s_resource('fern-reporter', port_forwards=8080)
+k8s_resource('fern-reporter', port_forwards=8080, resource_deps=['postgres'])
 k8s_resource('fern-ui', port_forwards='9091:5173')

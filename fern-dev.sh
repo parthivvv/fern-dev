@@ -3,8 +3,8 @@
 set -e
 
 # Configuration variables
-FERN_UI_REPO="https://github.com/guidewire-oss/fern-ui.git"  # Replace with actual repo URL
-FERN_REPORTER_REPO="https://github.com/guidewire-oss/fern-reporter.git"  # Replace with actual repo URL
+FERN_UI_REPO="https://github.com/guidewire-oss/fern-ui.git"  
+FERN_REPORTER_REPO="https://github.com/guidewire-oss/fern-reporter.git"  
 WORK_DIR="$HOME/fern-dev"
 K3D_CLUSTER_NAME="mycluster"
 REGISTRY_PORT="5000"
@@ -81,6 +81,17 @@ clone_repos() {
 # Create Kubernetes YAMLs
 create_k8s_yamls() {
     log "Creating Kubernetes YAML files..."
+    # postgres-config.yaml
+    cat > k8s/postgres-config.yaml << 'EOF'
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: postgres-config
+data:
+  postgresql.conf: |
+    listen_addresses = '*'
+    port = 5432
+EOF
 
     # fern-ui-deployment.yaml
     cat > k8s/fern-ui-deployment.yaml << 'EOF'
@@ -143,6 +154,10 @@ spec:
       labels:
         app: fern-reporter
     spec:
+      initContainers:
+      - name: wait-for-postgres
+        image: busybox
+        command: ['sh', '-c', 'until nc -z postgres 5432; do echo waiting for postgres; sleep 2; done;']
       containers:
       - name: fern-reporter
         image: fern-reporter:dev
@@ -193,18 +208,24 @@ spec:
         - containerPort: 5432
         env:
         - name: POSTGRES_USER
-          value: "devuser"
+          value: "fern"
         - name: POSTGRES_PASSWORD
-          value: "devpass"
+          value: "fern"
         - name: POSTGRES_DB
-          value: "devdb"
+          value: "fern"
         volumeMounts:
         - name: postgres-data
           mountPath: /var/lib/postgresql/data
+        - name: postgres-config
+          mountPath: /etc/postgresql/postgresql.conf
+          subPath: postgresql.conf
       volumes:
       - name: postgres-data
         persistentVolumeClaim:
           claimName: postgres-pvc
+      - name: postgres-config
+        configMap:
+          name: postgres-config
 ---
 apiVersion: v1
 kind: PersistentVolumeClaim
@@ -246,6 +267,8 @@ k8s_yaml('k8s/fern-reporter-deployment.yaml')
 k8s_yaml('k8s/fern-reporter-service.yaml')
 k8s_yaml('k8s/fern-ui-deployment.yaml')
 k8s_yaml('k8s/fern-ui-service.yaml')
+k8s_yaml('k8s/postgres-config.yaml')
+
 
 # Build the Go backend image with live code updates
 docker_build('fern-reporter', './fern-reporter',
@@ -313,7 +336,7 @@ COPY --from=build-env /app/migrations /app/migrations/
 EXPOSE 8080
 ENTRYPOINT ["/app/fern"]
 EOF
-
+}
     # fern-ui Dockerfile
     cat > fern-ui/Dockerfile << 'EOF'
 FROM --platform=${BUILDPLATFORM} node:18-slim AS base
@@ -337,7 +360,7 @@ setup_k3d_cluster() {
     k3d cluster create "$K3D_CLUSTER_NAME" \
         --registry-create myregistry \
         --port "${REGISTRY_PORT}:5000@server:0" \
-        --api-port 6443 \
+        --api-port 6445 \
         --servers 1 \
         --agents 0
     log "Waiting for cluster to be ready..."
