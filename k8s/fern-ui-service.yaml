@@ -7,4 +7,4 @@ spec:
     app: fern-ui
   ports:
   - port: 9091      # Exposed on cluster for Tilt port-forward
-    targetPort: 5173
+    targetPort: 9091

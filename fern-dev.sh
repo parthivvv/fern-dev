@@ -116,7 +116,7 @@ spec:
         image: fern-ui:dev
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 5173  # Vite's default dev port
+        - containerPort: 9091  # Vite's default dev port
         env:
         - name: VITE_API_URL
           value: "http://fern-reporter:8080"
@@ -133,7 +133,7 @@ spec:
     app: fern-ui
   ports:
   - port: 9091
-    targetPort: 5173
+    targetPort: 9091
 EOF
 
     # fern-reporter-deployment.yaml
@@ -165,8 +165,16 @@ spec:
         ports:
         - containerPort: 8080
         env:
-        - name: DB_URL
-          value: "postgres://fern:fern@postgres:5432/fern?sslmode=disable"
+        - name: FERN_HOST
+          value: "postgres"
+        - name: FERN_PORT
+          value: "5432"
+        - name: FERN_USERNAME
+          value: "fern"         # <-- set to your actual DB username
+        - name: FERN_PASSWORD
+          value: "fern"         # <-- set to your actual DB password
+        - name: FERN_DATABASE
+          value: "fern"  
 EOF
 
     # fern-reporter-service.yaml
@@ -289,7 +297,7 @@ docker_build('fern-ui', './fern-ui',
 # Define resources and port-forwarding
 k8s_resource('postgres', port_forwards=5432)
 k8s_resource('fern-reporter', port_forwards=8080)
-k8s_resource('fern-ui', port_forwards='9091:5173')
+k8s_resource('fern-ui', port_forwards='9091')
 EOF
 }
 
@@ -348,8 +356,8 @@ RUN npm install
 COPY . .
 RUN npm run build
 
-EXPOSE 5173
-CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
+EXPOSE 9091
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "9091"]
 EOF
 
 

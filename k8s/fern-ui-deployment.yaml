@@ -19,7 +19,7 @@ spec:
         image: fern-ui:dev
         imagePullPolicy: IfNotPresent
         ports:
-        - containerPort: 5173  # Vite's default dev port
+        - containerPort: 9091  # Vite's default dev port
         env:
         - name: VITE_API_URL
           # The frontend will use this environment variable (prefix VITE_) to reach the API
